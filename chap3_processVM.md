@@ -172,9 +172,9 @@ R3 <- R6 + 1
 #### Undefined cases
 
 * ISA
- * register 0 always value 0
+  * register 0 always value 0
 * behavioud
- * short-circuit condition
+  * short-circuit condition
 
 
 ## 3.3 State Mapping
@@ -186,16 +186,16 @@ R3 <- R6 + 1
 ### 3.3.1 Register Mapping
 
 * Guest reg N < Host reg N: MAY possible to map all to host regs
- * Runtime may use most/all registers for 
+  * Runtime may use most/all registers for 
    Intepreting, Dynamic Opt, LW/SW Context Block Register
 
 ### 3.3.2 Memory Address Space Mapping
 
 * Runtime Space + Guest Space <= Host*(Logical)* Space
- * Guest address 0 <=> Host address 0 (Let hw do the work)
+  * Guest address 0 <=> Host address 0 (Let hw do the work)
 
 * Guest Space > Host Space 
- * Software Translation (LW/SW overhead)
+  * Software Translation (LW/SW overhead)
 
 #### Runtime software-supported Translation Tables
 
@@ -206,17 +206,17 @@ R3 <- R6 + 1
 * Guest virt addr > Runtime disk file + Host virt addr > Swap + Host real addr
 
 * Translation Table Valid bit
- * guest memblock available in host addr space?
+  * guest memblock available in host addr space?
 
 * Can used by both Intepreter/BT
- * Unavoidable if Simantic mismatch (64bit simulated on 32bit machine)
+  * Unavoidable if Simantic mismatch (64bit simulated on 32bit machine)
 
 
 #### Direct Translation Methods
 
 * Methods:
- * Guest Address + Base Address -> Host Address
- * Guest Address -> Host Address
+  * Guest Address + Base Address -> Host Address
+  * Guest Address -> Host Address
 * Issue: insufficient space for runtime
 
 
@@ -224,16 +224,16 @@ R3 <- R6 + 1
 
 * SWTT slow, DT fails on ````Guest > Host + Runtime````
 * Strategic placement (DT methods)
- * Guest will not always used up Host space
- * Runtime put in region not used by Guest
+  * Guest will not always used up Host space
+  * Runtime put in region not used by Guest
 
 
 ## 3.4 Memory Architecture Emulation
 
 * Important features of ABI Memory Arch
- 1. Overall structure of address space: segments, flat, linear?
- 2. Access Privilege supported: R,W,E 
- 3. Granularity: Smallest size for allocation and protection
+  1. Overall structure of address space: segments, flat, linear?
+  2. Access Privilege supported: R,W,E 
+  3. Granularity: Smallest size for allocation and protection
 
 ### 3.4.1 Memory Protection
 
@@ -243,8 +243,8 @@ R3 <- R6 + 1
 #### Host-Supported Memory Protection
 
 * Methods:
- 1. By syscall to set a page privilege by runtime
- 2. Register page fault signal to runtime
+  1. By syscall to set a page privilege by runtime
+  2. Register page fault signal to runtime
  
 * simOS: mmap guest address region to serveral files with privilege set  
 
@@ -254,18 +254,18 @@ R3 <- R6 + 1
 #### Page Size Issues
 
 * Larger Host page size: 
- * e.g. 2 different privilege guest page fit in single host page
- * but host page can only support one privilege setting
+  * e.g. 2 different privilege guest page fit in single host page
+  * but host page can only support one privilege setting
 
 * Possible Sol:
- * realign guest page - must ensure correctness, portability reduced
- * set host page to lesser privilege
+  * realign guest page - must ensure correctness, portability reduced
+  * set host page to lesser privilege
 
 * Privilege level mismatch:
- * Host support only R,W but Guest need R,W,E
- * Intepretation
- * BT - checks only runtime read and translate guest code
- * Detecting Guest change protection?
+  * Host support only R,W but Guest need R,W,E
+  * Intepretation
+  * BT - checks only runtime read and translate guest code
+  * Detecting Guest change protection?
 
 > * new arch support var page sizes
 
@@ -282,7 +282,7 @@ R3 <- R6 + 1
 - If data & code mixed (in a same page), pseudo SMC will cause false traps
 
 * Frequent traps cause performance loss, Dynamic Check
- * link Source src to prolog, turn off write protection 
+  * link Source src to prolog, turn off write protection 
  	when write protection faults occured
  * check if side table == guest memory 
  * if same (SMC not occur) turn on wp, unlink prolog;
@@ -301,7 +301,7 @@ R3 <- R6 + 1
 * e.g.hg perform checksum on self instruction
 * Original copy is still in code cache, thus it will have correct data
 * But some VM have code patching approach, will let the checksum wrong
- - ADORE, PIN
+  - ADORE, PIN
 * Sol: read-protect? pseudo-SMC will cause false trap
 
 #### Protecting RT Memory
@@ -329,27 +329,27 @@ R3 <- R6 + 1
 ## 3.6 Exception Emulation
 
 - ABI visible
- - exception registered
- - exception (may unregister) that will cause process terminate
+  - exception registered
+  - exception (may unregister) that will cause process terminate
 - ABI invisible
- - exception (unregistered) but no signal emitted
+  - exception (unregistered) but no signal emitted
 
 ### 3.6.1 Exception Detection
 
 1. Traps detected by both host & guest platforms (ABI visible on both)
- - We only care about this
+  - We only care about this
 2. Traps no detected by host (ABI invisible on host)
- - Real case? Nah
+  - Real case? Nah
 3. Traps no detected by guest and visible on host (ABI visible on host only)
- - Dont care on guest
+  - Dont care on guest
 
 ### 3.6.2 Interrupt Handling
 
 - Interrupt will need precise state of guest
 - Runtime hold the interrupt and let guest reach basic block end
- - Problem: guest in loop, and no basic block end reach
- - Sol: unchain the loop in code cache, let it reach bb end
- - if interrpts are much, vm better disable chaining
+  - Problem: guest in loop, and no basic block end reach
+  - Sol: unchain the loop in code cache, let it reach bb end
+  - if interrpts are much, vm better disable chaining
 
 > traps handling missed QQ
 
@@ -375,8 +375,8 @@ R3 <- R6 + 1
 ### 3.7.1 Same OS Emulation
 
 - Host OS functions are available, but calling convention different
- - How parameters passing
- - Value Return
+  - How parameters passing
+  - Value Return
 
 #### OS Call Translation
 
@@ -396,10 +396,10 @@ R3 <- R6 + 1
 ## 3.8 Code Cache Management
 
 - Code cache different from hw cache
- - Code cache in memory, regen is expensive
- - Code cache have varient length
- - No backing store
- - Dependences among basic blocks by linking (dangling basic block pointer)
+  - Code cache in memory, regen is expensive
+  - Code cache have varient length
+  - No backing store
+  - Dependences among basic blocks by linking (dangling basic block pointer)
 
 ### 3.8.1 Code Cache Implementations
 
@@ -430,7 +430,7 @@ R3 <- R6 + 1
 - BT: high startup, low steady state
 
 - Staged Emulation
- - Adjust optimize level according to frequency of execute
+  - Adjust optimize level according to frequency of execute
 
 ## 3.9 System Environment
 

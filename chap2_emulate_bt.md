@@ -259,10 +259,10 @@ jmp %eax ; SPC = eax, TPC = ?
 ````
 
 * Basic Block: 每次 translate 只處理一個 BB 單位
- - static bb: labels and branches
- - dynamic bb: branches only
- - amount of dynamic bb > static bb, 因為一個loop指令，在static只會出現一次，而在dynamic會出現N次
- - size(single) of dynamic bb > static bb, static 由 labels&branches 切割，dynamic 由只有 branches 切割
+  - static bb: labels and branches
+  - dynamic bb: branches only
+  - amount of dynamic bb > static bb, 因為一個loop指令，在static只會出現一次，而在dynamic會出現N次
+  - size(single) of dynamic bb > static bb, static 由 labels&branches 切割，dynamic 由只有 branches 切割
 
 * 每到 Basic Block(branch) 結束，Interpreter 則會 context switch 到 EM 上去檢查即將 jump 去的 TPC 位址 
 
@@ -270,7 +270,7 @@ jmp %eax ; SPC = eax, TPC = ?
 #### Tracking Source Program Code
 
 * EM 和 Target Code 的切換：
- - 執行 Target Code, 用 branch-link 取代 branch 跳到 EM, 將 SPC 嵌在 bl 指令後面，讓 EM 透過 link reg 相對位子去存取
+  - 執行 Target Code, 用 branch-link 取代 branch 跳到 EM, 將 SPC 嵌在 bl 指令後面，讓 EM 透過 link reg 相對位子去存取
  - 不ret link register 的位子，而是跳到 lookup 後的位子
 
 ````
@@ -353,9 +353,9 @@ mov pc, r2
 ### 2.8.1 Register Arch
 
 * Target ISA 的 regs 被用來當作：
- - Source ISA 的 General/Special Purpose registers 
- - 指向 runtime 時 Source Context 和 Memory Image 的位置 (至少2組)
- - EM 運算所需
+  - Source ISA 的 General/Special Purpose registers 
+  - 指向 runtime 時 Source Context 和 Memory Image 的位置 (至少2組)
+  - EM 運算所需
   
  所以Target ISA regs 數量需 **遠大於** Source ISA regs
 
@@ -370,10 +370,10 @@ mov pc, r2
 * 最困難的情況：Source ISA 有許多複雜的 cc 而 Target ISA 不用任何 cc
 
 * Lazy Evaluation: 
- - 有機會更新 cc 的*指令*和*所有參數*存起來，有需要時再調閱
+  - 有機會更新 cc 的*指令*和*所有參數*存起來，有需要時再調閱
 
 * Data flow analysis: 
- - BT 時候可以只在需要用 cc 的指令(jmp)前，才嵌入慾更新 cc 值的指令進 target code
+  - BT 時候可以只在需要用 cc 的指令(jmp)前，才嵌入慾更新 cc 值的指令進 target code
 
 * 將每個 cc 設定一個 reserved reg 來加速 emulation，Lazy Eva 則是每一個 cc 都 存有最後一組會改變該 cc 狀態的*指令*和*所有參數*
 
@@ -382,15 +382,15 @@ mov pc, r2
 
 #### Data Format
 * Integer(2's compliment) & FP(IEEE standard) 在現代ISA內都標準化
- - 舊 ISA 需要被模擬
- - 熱門 ISA 常被模擬 ：IA32 用 80 bit FP
+  - 舊 ISA 需要被模擬
+  - 熱門 ISA 常被模擬 ：IA32 用 80 bit FP
 
 #### Arithmetic
 * 獨特的指令，軟體模擬完整度缺佳
- - PowerPC mul-add，簡單地拆開用乘、加無法完整重現結果
+  - PowerPC mul-add，簡單地拆開用乘、加無法完整重現結果
 
 * 實作不同，導致不一樣精準的答案
- - 除法：小數點位移成整數再除 vs 直接對浮點進行除法
+  - 除法：小數點位移成整數再除 vs 直接對浮點進行除法
 
 
 ### 2.8.4 Memory Address Resolution
@@ -405,13 +405,13 @@ mov pc, r2
 * Miss Data Alignment 導致多餘的 cache miss
 
 * 如何解決 MDA？
- - Exception Handler: ?
- - Compiler: ````__unaligned```` 宣告指標不對其 或 ````__declspace(align(2^N))```` 宣告對2^N bit對齊的記憶體
- - C runtime 去對齊
+  - Exception Handler: ?
+  - Compiler: ````__unaligned```` 宣告指標不對其 或 ````__declspace(align(2^N))```` 宣告對2^N bit對齊的記憶體
+  - C runtime 去對齊
 
 * BT 處理 MDA
- - 偵測: Static/Dynamic Profiling, Exception Handling 
- - 處理: per-byte 讀寫
+  - 偵測: Static/Dynamic Profiling, Exception Handling 
+  - 處理: per-byte 讀寫
 
 ### 2.8.6 Data Order (Big & Little Endian)
 
@@ -429,8 +429,8 @@ mov pc, r2
 
 * QEMU 少了優化
 
-*  HQEMU 用**2**條thread：傳統QEMU、將 源code 轉換為 LLVM 做優化
- -  優化問題：很多bug、高度重複使用的code才有優化的價值
+* HQEMU 用**2**條thread：傳統QEMU、將 源code 轉換為 LLVM 做優化
+  - 優化問題：很多bug、高度重複使用的code才有優化的價值
 
 ## LLBT (LLVM based Static BT)
 
