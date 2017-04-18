@@ -241,7 +241,7 @@ jmp %eax ; SPC = eax, TPC = ?
 
 * Emulator Manager 提供 Runtime support
 * Interpreter 執行 source binary
-* Binary Translation 則將 interpreter 程式轉危為 target binary
+* Binary Translation 則將 interpreter 程式轉為 target binary
 * Map Table： Key=SPC, Val=TPC
 
 * next SPC:TPC cache miss -> EM Interpret -> 存入Code Cache -> 把source binary起始SPC對應到Code Cache的位子(TPC) 寫到 address mapping table 中
