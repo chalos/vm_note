@@ -10,32 +10,32 @@
 ## 3.1 Virtual Machine Implementation
 
 * Loader
- - 配置記憶體，載入 guest memory image
- - 該記憶體內容用來 interprete & BT
- - 載入執行 runtime code
+  - 配置記憶體，載入 guest memory image
+  - 該記憶體內容用來 interprete & BT
+  - 載入執行 runtime code
 
 * Initialization
- - 配置 code cache、初始化 tables
- - 向 host OS 註冊 interupt handler
+  - 配置 code cache、初始化 tables
+  - 向 host OS 註冊 interupt handler
 
 * Emulation Engine
- - 執行 interpretation / BT (回到第二章內容)
+  - 執行 interpretation / BT (回到第二章內容)
 
 * Code Cache Manager
- - 在 code cache 有限的情況下，做 memory 回收
+  - 在 code cache 有限的情況下，做 memory 回收
 
 * Profile DB
- - 動態 guest program 資訊，用來optimize
+  - 動態 guest program 資訊，用來optimize
  
 * OS Call Emulator
- - 攔截 syscall，模擬syscall 或 往下傳
+  - 攔截 syscall，模擬syscall 或 往下傳
 
 * Exception Emulator
- - 來自 OS 的 Interrupt
- - 傳給 Host OS 的 Guest Program trap
+  - 來自 OS 的 Interrupt
+  - 傳給 Host OS 的 Guest Program trap
 
 * Exception side tables
- - 支撐 Exception Emulator 讓模擬準確
+  - 支撐 Exception Emulator 讓模擬準確
 
 
 ## 3.2 Compatibility
@@ -47,14 +47,14 @@
 ### 3.2.1 Levels of Compatibility
 
 * intrinsic compatibility = transparent compatibility
- - 無論 guest code 長得如何，都能與在 native 平台上行為一樣
- - VM上多了 runtime，一些情況難實現 icomp，比如：
+  - 無論 guest code 長得如何，都能與在 native 平台上行為一樣
+  - VM上多了 runtime，一些情況難實現 icomp，比如：
    checksum memory、
    guest process佔用完virtual memory(排擠到runtime)、
    高準確度的浮點運算
   
 * extrinsic compatibility
- - 官方規範說哪些 guest code、(使用)library、toolchains 支援兼容
+  - 官方規範說哪些 guest code、(使用)library、toolchains 支援兼容
 
 
 ### 3.2.2 A Compatibility Framework
@@ -87,22 +87,22 @@ Host
 #### State Mapping
 
 * 對於 Host 和 Guest 不一樣的機器 (Guest RegN > Host RegN)
- * Map 到 Host 的 MM上
+  * Map 到 Host 的 MM上
 
 #### Operations
 
 * 從 trap 到 OS/interrupt (vice versa) 時需要 state transfer
- * Si, Sj, Sk 時
+  * Si, Sj, Sk 時
 
 
 #### Sufficient Compatibility Conditions
 
 * 從 UMS 轉 OMS:
- * UMS 不用 ins granularity，而是在 visible point (bb/trap etc) 時才 expose 到外面
- * 增加 translated code 的彈性(做進一步的opt)
+  * UMS 不用 ins granularity，而是在 visible point (bb/trap etc) 時才 expose 到外面
+  * 增加 translated code 的彈性(做進一步的opt)
 
 * 從 OMS 轉 UMS: 
- * 完整的 Mapping (SPC-TPC etc) 資訊，讓 Runtime/OS 可以直接修改 UMS
+  * 完整的 Mapping (SPC-TPC etc) 資訊，讓 Runtime/OS 可以直接修改 UMS
 
 
 #### Discussion
@@ -110,21 +110,21 @@ Host
 * Compatibility Framework: Formal conditions to discuss compatibility issues
 
 * **Instrinsic** compatible is hard:
- * State mapping: guest virtual mem will always smaller than it runs on native
- * Ctrl transfer mapping: some trap in interrupt emu will be removed (extrinsic then)
- * User level ins compatible: FP ALU accuracy
- * Guest OS != Host OS feature: May avoid it
+  * State mapping: guest virtual mem will always smaller than it runs on native
+  * Ctrl transfer mapping: some trap in interrupt emu will be removed (extrinsic then)
+  * User level ins compatible: FP ALU accuracy
+  * Guest OS != Host OS feature: May avoid it
 
 
 ### 3.2.3 Implementation Dependences
 
 * Architecture and Implementation (aka MicroArch)
- * Difference betw. MicroArch makes functionality different
- * e.g. caches: some will not automatic modified cache contents (passive cache flush needed)
+  * Difference betw. MicroArch makes functionality different
+  * e.g. caches: some will not automatic modified cache contents (passive cache flush needed)
 
 * Logical SMC: 保證執行最新，以下會讓Logical失效
- * 程式用 cache的操作 和 SMC 來判斷底下的 MicroArch 的類型
- * 有些ISA需要flush cache才能執行最新的 SMC
+  * 程式用 cache的操作 和 SMC 來判斷底下的 MicroArch 的類型
+  * 有些ISA需要flush cache才能執行最新的 SMC
   
 > Emulate OS will always trigger self-mod code (when start new/halt prog)
 
