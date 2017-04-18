@@ -284,8 +284,8 @@ R3 <- R6 + 1
 * Frequent traps cause performance loss, Dynamic Check
   * link Source src to prolog, turn off write protection 
  	when write protection faults occured
- * check if side table == guest memory 
- * if same (SMC not occur) turn on wp, unlink prolog;
+  * check if side table == guest memory 
+  * if same (SMC not occur) turn on write proctection, unlink prolog;
 
 #### Fine-Grain Write Protection
 
@@ -294,7 +294,9 @@ R3 <- R6 + 1
 
 #### True SMC
 
-- remove SMC code from prevent it to execute
+- remove SMC code from prevent it to execute by idiom recognition
+  - modify instruction immediate value
+  - immediate value loaded from source image
 
 #### Self-reference code
 
@@ -321,9 +323,26 @@ R3 <- R6 + 1
 
 ## 3.5 Instruction Emulation
 
+* When to BT? When to Inteprete?
+
 ### 3.5.1 Performance Tradeoff
 
+* Start-up time
+  * one time cost: binary to IR, full BT, same ISA optimization..
+  * decode/dispatch 0 sut
+* Steady-state time
+  * instruction being emu via interprete/BT
+* S + NT, S:sut, T:sst, N:emulated times 
+  
 ### 3.5.2 Staged Emulation
+
+* A staged emu contains both Interp., BT
+* Hard to predict hotspot of code
+  * run Interp first -> collect profile data
+  * after the block reaches a times threshold -> full BT
+  * after BT block reaches another threshold -> optimize
+
+* Superblock: multiple basic block merged into larger unit for BT & Opt
 
 
 ## 3.6 Exception Emulation
@@ -365,12 +384,20 @@ R3 <- R6 + 1
 
 #### BT: Register State
 
+* Simple if:
+  * No code reordering done
+  * No reg state update ins removed (same seq of src to target register mapping & update)
+
 #### BT: Memory State
+
+* Memory state changed by store instruction
+* Simple if:
+  * No reorder between Memory store & Potential trapping ins (restrict opt)
 
 
 ## 3.7 OS Emulation
 
-- maintain compatiblity at ABI level, not emulate ins but functions
+- maintain compatiblity at ABI level, **not** emulate instructions but **functions**
 
 ### 3.7.1 Same OS Emulation
 
@@ -378,28 +405,36 @@ R3 <- R6 + 1
   - How parameters passing
   - Value Return
 
-#### OS Call Translation
+#### OS syscall Translation
 
-- Jump to a wrapper code, that convert the parameters and return value to/from host
-
+- Mapping guest OS syscall to host OS syscall
+- Jump to a wrapper code, that convert the parameters and return value to/from host OS
 
 #### RT-Implemented OS Functions
 
-#### Nasty Realities
+* Not all OS op need to translate, e.g. memory management syscall (e.g. brk)
+* Runtime controls guest memory space, so no need to pass to Host OS
 
 
 ### 3.7.2 Different OS Emulation
 
+* ad-hoc process: implement/porting case-by-case
+
 #### E.g. Enforcing File Limits
+
+* Linux can be given file limit on size of file can write (setrlimit)
+* Win32 no corresponding limit
+* ad-hoc implementation: to handle getrlimit(), setrlimit() call when emulate linux on win32
+* restrict the set of applications to be emulated (e.g. WABI)
 
 
 ## 3.8 Code Cache Management
 
 - Code cache different from hw cache
-  - Code cache in memory, regen is expensive
   - Code cache have varient length
-  - No backing store
-  - Dependences among basic blocks by linking (dangling basic block pointer)
+  - No backing store, should regen after removed
+  - Regen is expensive
+  - Dependences among basic blocks by linking (removing will possible cause dangling basic block pointer)
 
 ### 3.8.1 Code Cache Implementations
 
@@ -407,9 +442,28 @@ R3 <- R6 + 1
 
 #### LRU
 
+- temporal locality
+- difficult to implement
+- overhead/extra memory to track LRU cache
+- dependency link should update after a LRU cache removed
+  - Solution: back pointers
+  - But table size is huge, should maintain a search structure
+- removed cache at middle of cache block cause fragmentation, while code cache are diff in size
+
+````
+|---------|
+| block A |
+|---------|
+| block B | --> B removed causes fragment between A,C
+|---------|
+| block C |
+|---------|
+
+````
+
 #### Flush When Full
 
-- huge overhead on after flush
+- huge overhead on regen after flush
 
 #### Preemptive Flush
 
@@ -418,19 +472,24 @@ R3 <- R6 + 1
 
 #### Double buffer
 
-- Maintain 2 buffers, when a buffer full flush another buffer; change to another buffer and migrate previous reused code to new buffer and flush after second cache full
+- Maintain 2 buffers 
+- Change to new buffer when previous full 
+- Migrate previous reused/hot code to new buffer
+- flush previous buffer after new cache is full
 
 #### Fine-Grained FIFO
 
+- eliminate fragment problem in LRU
+- still need to keep backpointers
+
 #### Coarse-Grained FIFO
 
-#### Performance
+- several FIFO blocks
+- same FIFO blocks backpointers can be removed, only maintain cross FIFO blocks backpointers
+- Code cache is removed:
+  - perform linear check on same FIFO block
+  - cross block backpointer table
 
-- Intepreter: low startup, high steady state
-- BT: high startup, low steady state
-
-- Staged Emulation
-  - Adjust optimize level according to frequency of execute
 
 ## 3.9 System Environment
 
