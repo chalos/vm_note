@@ -1,6 +1,9 @@
 # QEMU
 
-參考：http://people.cs.nctu.edu.tw/~chenwj/slide/QEMU/QEMU-tcg-01.txt
+參考：
+http://people.cs.nctu.edu.tw/~chenwj/slide/QEMU/QEMU-tcg-01.txt
+https://lists.gnu.org/archive/html/qemu-devel/2011-04/pdfhC5rVdz7U8.pdf
+http://wiki.qemu.org/Documentation/TCG/frontend-ops
 
 ## 0
 
@@ -13,7 +16,10 @@ src 的 macro很多很複雜，configure 時候，可以再 CFLAG上加 -save-te
 
 ## TCG
 
-source guest binary -> TCG IR -> target host binary
+- source guest binary -> TCG IR -> target host binary
+- Debug: `--enable-debug-tcg`
+- 執行 qemu 時: `qemu -d out_op,out_asm` 來看 tcg log
+
 
 #### IR 類別
 * Move
@@ -46,6 +52,11 @@ source guest binary -> TCG IR -> target host binary
 
 ##### linux-user/main.c : cpu_loop
 
+- `cpu_loop()` -> `trapnr = cpu_x86_exec(env)` -> `prologue` -> tc ... eob/trap -> `epilogue` -> `switch(trapnr)` -> `process_pending_signals(env)`
+- `cpu_loop()` 處理 IRQ, translation, 執行guest`cpu_loop()`
+- `prologue` 做 push EM stack (aka context switch) + save to memory
+- `epilogue` 設 return addr
+
 ````
 loop:
 	if(setjump(env->jmp_env) is 0): 
@@ -57,7 +68,9 @@ loop:
 		next_tb <= tcg_qemu_tb_exec(tc_ptr)
 ````
 
-##### tcg/tcg.c : tcg_prolouge_init => tcg/i386/tcg-target.c : tcg_target_qemu_prologue
+##### TCG
+
+- tcg/tcg.c : tcg_prolouge_init => tcg/i386/tcg-target.c : tcg_target_qemu_prologue
 
 - QEMU branch 以 function call方式到 cc 裡面執行
 - 不同平台有不同calling convention，tcg_prologue_init 產生 prologue/epilogue 的工作 轉交 tcg_target_qemu_prologue (?
@@ -92,7 +105,54 @@ tcg_target_qemu_prologue(TCGContext *tcgctx):
 
 ##### TCGContext
 - 生成 TCG IR 的 meta
+- `TCGv` => `TCGv_i32` => `int`
+- `TCGv_ptr` => `TCGv_i32` => `int`
 
-##### DisasContext
+##### DisasContext (DS)
+- `DisasContext` 在 translate.c 內宣告
 - Self modify guest code 用的 meta
 
+##### Function`gen_eob()`
+- end of block
+
+
+
+## Traces
+
+##### From `case ret`
+````
+0 gen_pop_T0(DS* s)
+ 1 gen_op_movl_A0_reg(reg=R_ESP=4)
+  2 tcg_gen_mov_t1(ret=cpu_A0=15, arg=cpu_regs[reg=4])
+  => tcg_gen_mov_i32($@)
+  if(ret != arg):
+   3 tcg_gen_op2_i32(opc=INDEX_op_mov_i32,15,cpu_regs[4])
+ 1 gen_op_ld_T0_A0(idx=s->dflag+1+s->mem_index=2)
+  2 gen_op_ld_v(idx=2, t0=cpu_T[0]=13, a0=cpu_A0=15)
+  mem_idx = idx>>2-1 = -1
+  switch(idx & 0xff):
+  case2:
+   3 tcg_gen_qemu_ld32u(ret=t0=13, addr=a0=15, mem_idx=-1)
+    4 tcg_gen_op3i_i32(opc=INDEX_op_qemu_ld32. ret=13, addr=15, mem_idx=-1)
+0 gen_pop_update(DS *s)
+ 1 gen_stack_update(DS *s, addend=2<<s->(dflags=1)=4)
+  2 gen_op_add_reg_im(size=1, reg=R_ESP=4, val=added=4)
+   switch(size)
+   case1:
+   3 tcg_gen_addi_t1(ret=cpu_tmp0=-1, arg1=cpu_regs[reg=4]=15, arg2=val=4)
+    4 tcg_const_i32(arg2) = t0 = 26
+    4 tcg_gen_add_i32(ret=-1,arg1=15,t0=26)
+     5 tcg_gen_op3_i32(INDEX_op_add_i32, ret=-1, arg1=26, arg2=4)
+    4 tcg_temp_free_i32(t0=26)
+   3 tcg_gen_ext32u_t1(ret=cpu_tmp0=-1, arg=cpu_tmp0=-1)
+    => tcg_gen_mov_i32($@)
+     if(ret != arg):
+    4 tcg_gen_op2_i32(opc=INDEX_op_mov_i32,-1,-1)
+   3 tcg_mov_t1(cpu_regs[reg=4]=9, cpu_tmp0=-1)
+0 gen_op_jmp_T0()
+0 pop_stack(cpu_env=0, next_eip=cpu_T[0])
+0 gen_eob(DS* s)
+ 1 tcg_gen_exit_tb(val=0)
+  2 tcg_gen_op1i(INDEX_op_exit_tb, val=0)
+ 1 s->is_jmp = DISAS_TB_JUMP = 3
+````
